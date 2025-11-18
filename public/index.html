@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจัดการร้านอาหาร</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>ระบบจัดการร้านอาหาร</h1>
+            <nav>
+                <button onclick="showSection('tables')" class="nav-btn active">จัดการโต๊ะ</button>
+                <button onclick="showSection('order')" class="nav-btn">สั่งอาหาร</button>
+                <button onclick="showSection('orders')" class="nav-btn">ออเดอร์ทั้งหมด</button>
+            </nav>
+        </header>
+
+        <section id="tables" class="section active">
+            <div class="section-header">
+                <h2>สถานะโต๊ะ</h2>
+                <button onclick="showAddTableForm()" class="btn btn-add">+ เพิ่มโต๊ะใหม่</button>
+            </div>
+
+            <div id="addTableForm" class="add-table-form" style="display: none;">
+                <h3>เพิ่มโต๊ะใหม่</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="newTableNumber">หมายเลขโต๊ะ:</label>
+                        <input type="number" id="newTableNumber" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newTableCapacity">จำนวนที่นั่ง:</label>
+                        <input type="number" id="newTableCapacity" min="1" value="4" required>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button onclick="addNewTable()" class="btn btn-primary">บันทึก</button>
+                    <button onclick="hideAddTableForm()" class="btn btn-secondary">ยกเลิก</button>
+                </div>
+            </div>
+<!-- แก้ไขโต๊ะ -->
+            <div id="editTableForm" class="add-table-form" style="display: none;">
+                <h3>แก้ไขโต๊ะ</h3>
+                <input type="hidden" id="editTableId">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editTableNumber">หมายเลขโต๊ะ:</label>
+                        <input type="number" id="editTableNumber" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editTableCapacity">จำนวนที่นั่ง:</label>
+                        <input type="number" id="editTableCapacity" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editTableStatus">สถานะ:</label>
+                        <select id="editTableStatus" required>
+                            <option value="ว่าง">ว่าง</option>
+                            <option value="กำลังใช้งาน">กำลังใช้งาน</option>
+                            <option value="กำลังจัดการ">กำลังจัดการ</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button onclick="updateTable()" class="btn btn-primary">บันทึก</button>
+                    <button onclick="hideEditTableForm()" class="btn btn-secondary">ยกเลิก</button>
+                </div>
+            </div>
+
+            <div class="status-legend">
+                <span class="legend-item"><span class="status-dot vacant"></span> ว่าง</span>
+                <span class="legend-item"><span class="status-dot occupied"></span> กำลังใช้งาน</span>
+                <span class="legend-item"><span class="status-dot processing"></span> กำลังจัดการ</span>
+            </div>
+            <div id="tablesGrid" class="tables-grid"></div>
+        </section>
+
+        <section id="order" class="section">
+            <h2>สั่งอาหาร</h2>
+            <div class="order-form">
+                <div class="form-group">
+                    <label for="selectTable">เลือกโต๊ะ:</label>
+                    <select id="selectTable" required onchange="saveTableSelection()">
+                        <option value="">-- เลือกโต๊ะ --</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="selectEmployee">เลือกพนักงาน:</label>
+                    <select id="selectEmployee" required onchange="saveEmployeeSelection()">
+                        <option value="">-- เลือกพนักงาน --</option>
+                    </select>
+                </div>
+
+                <div class="menu-section">
+                    <div class="section-header">
+                        <h3>เมนูอาหาร</h3>
+                        <button onclick="showAddMenuForm()" class="btn btn-add">+ เพิ่มเมนูใหม่</button>
+                    </div>
+
+                    <div class="filter-section">
+                        <div class="form-group">
+                            <label for="filterCategory">หมวดหมู่:</label>
+                            <select id="filterCategory" onchange="applyFilters()">
+                                <option value="ทั้งหมด">ทั้งหมด</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="filterSort">เรียงราคา:</label>
+                            <select id="filterSort" onchange="applyFilters()">
+                                <option value="">ไม่เรียง</option>
+                                <option value="asc">น้อย → มาก</option>
+                                <option value="desc">มาก → น้อย</option>
+                            </select>
+                        </div>
+                    </div>
+<!-- แก้ไขเมนู -->
+                    <div id="addMenuForm" class="add-table-form" style="display: none;">
+                        <h3>เพิ่มเมนูใหม่</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="newMenuName">ชื่อเมนู:</label>
+                                <input type="text" id="newMenuName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="newMenuPrice">ราคา:</label>
+                                <input type="number" id="newMenuPrice" min="1" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="newMenuCategory">หมวดหมู่:</label>
+                                <select id="newMenuCategory" required>
+                                    <option value="">-- เลือกหมวดหมู่ --</option>
+                                    <option value="อาหารจานหลัก">อาหารจานหลัก</option>
+                                    <option value="ของว่าง">ของว่าง</option>
+                                    <option value="เครื่องดื่ม">เครื่องดื่ม</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button onclick="addNewMenu()" class="btn btn-primary">บันทึก</button>
+                            <button onclick="hideAddMenuForm()" class="btn btn-secondary">ยกเลิก</button>
+                        </div>
+                    </div>
+
+                    <div id="editMenuForm" class="add-table-form" style="display: none;">
+                        <h3>แก้ไขเมนู</h3>
+                        <input type="hidden" id="editMenuId">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="editMenuName">ชื่อเมนู:</label>
+                                <input type="text" id="editMenuName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="editMenuPrice">ราคา:</label>
+                                <input type="number" id="editMenuPrice" min="1" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="editMenuCategory">หมวดหมู่:</label>
+                                <select id="editMenuCategory" required>
+                                    <option value="">-- เลือกหมวดหมู่ --</option>
+                                    <option value="อาหารจานหลัก">อาหารจานหลัก</option>
+                                    <option value="ของว่าง">ของว่าง</option>
+                                    <option value="เครื่องดื่ม">เครื่องดื่ม</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button onclick="updateMenu()" class="btn btn-primary">บันทึก</button>
+                            <button onclick="hideEditMenuForm()" class="btn btn-secondary">ยกเลิก</button>
+                        </div>
+                    </div>
+
+                    <div id="menuList" class="menu-list"></div>
+                </div>
+
+                <div class="cart-section">
+                    <h3>รายการที่สั่ง</h3>
+                    <div id="cartItems" class="cart-items"></div>
+                    <div class="cart-total">
+                        <strong>ยอดรวม: <span id="cartTotal">0</span> บาท</strong>
+                    </div>
+                    <button onclick="submitOrder()" class="btn btn-primary">ยืนยันการสั่งอาหาร</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="orders" class="section">
+            <h2>ออเดอร์ทั้งหมด</h2>
+            <div id="ordersList" class="orders-list"></div>
+        </section>
+    </div>
+
+    <div id="receiptModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <div id="receiptContent"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
