@@ -11,10 +11,21 @@
     "dev-web": "nodemon server.js",
     "init-db": "node init-database.js"
   },
-  "keywords": ["restaurant", "management", "order", "table", "sqlite", "cli", "desktop"],
+  "keywords": [
+    "restaurant",
+    "management",
+    "order",
+    "table",
+    "sqlite",
+    "cli",
+    "desktop"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "body-parser": "^2.2.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
     "sqlite3": "^5.1.6"
   },
   "devDependencies": {

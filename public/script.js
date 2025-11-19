@@ -69,7 +69,14 @@ function displayTables() {
     const grid = document.getElementById('tablesGrid');
     grid.innerHTML = '';
 
-    tables.forEach(table => {
+    // เรียงโต๊ะตามหมายเลข (A1, A2, A3...)
+    const sortedTables = [...tables].sort((a, b) => {
+        const numA = parseInt(a.Table_Number.replace(/\D/g, ''));
+        const numB = parseInt(b.Table_Number.replace(/\D/g, ''));
+        return numA - numB;
+    });
+
+    sortedTables.forEach(table => {
         const statusClass = getStatusClass(table.Status);
         const card = document.createElement('div');
         card.className = `table-card ${statusClass}`;
@@ -81,7 +88,7 @@ function displayTables() {
             </div>
             <div class="table-card-actions">
                 <button onclick="event.stopPropagation(); editTable(${table.Table_ID})" class="btn-edit">แก้ไข</button>
-                <button onclick="event.stopPropagation(); deleteTable(${table.Table_ID}, ${table.Table_Number})" class="btn-delete">ลบ</button>
+                <button onclick="event.stopPropagation(); deleteTable(${table.Table_ID}, '${table.Table_Number}')" class="btn-delete">ลบ</button>
             </div>
         `;
 
@@ -279,17 +286,34 @@ function displayTableSelect() {
     const currentValue = select.value || selectedTableId;
     select.innerHTML = '<option value="">-- เลือกโต๊ะ --</option>';
 
-    tables.forEach(table => {
+    // เรียงโต๊ะตามหมายเลข (A1, A2, A3...)
+    const sortedTables = [...tables].sort((a, b) => {
+        const numA = parseInt(a.Table_Number.replace(/\D/g, ''));
+        const numB = parseInt(b.Table_Number.replace(/\D/g, ''));
+        return numA - numB;
+    });
+
+    sortedTables.forEach(table => {
         const option = document.createElement('option');
         option.value = table.Table_ID;
         option.textContent = `โต๊ะ ${table.Table_Number} (${table.Status})`;
 
+        // เพิ่มสีให้ชัดเจน
         if (table.Status === 'ว่าง') {
             option.className = 'option-vacant';
+            option.style.backgroundColor = '#28a745';
+            option.style.color = 'white';
+            option.style.fontWeight = 'bold';
         } else if (table.Status === 'กำลังใช้งาน') {
             option.className = 'option-occupied';
+            option.style.backgroundColor = '#dc3545';
+            option.style.color = 'white';
+            option.style.fontWeight = 'bold';
         } else if (table.Status === 'กำลังจัดการ') {
             option.className = 'option-processing';
+            option.style.backgroundColor = '#ffc107';
+            option.style.color = '#333';
+            option.style.fontWeight = 'bold';
         }
 
         select.appendChild(option);
@@ -653,8 +677,11 @@ function editTable(tableId) {
         return;
     }
 
+    // แสดงเฉพาะตัวเลข (ตัด "A" ออก)
+    const tableNumberOnly = table.Table_Number.replace(/^A/, '');
+
     document.getElementById('editTableId').value = table.Table_ID;
-    document.getElementById('editTableNumber').value = table.Table_Number;
+    document.getElementById('editTableNumber').value = tableNumberOnly;
     document.getElementById('editTableCapacity').value = table.Capacity;
     document.getElementById('editTableStatus').value = table.Status;
 
@@ -674,14 +701,17 @@ function hideEditTableForm() {
 
 async function updateTable() {
     const tableId = document.getElementById('editTableId').value;
-    const tableNumber = document.getElementById('editTableNumber').value;
+    const tableNumberInput = document.getElementById('editTableNumber').value;
     const capacity = document.getElementById('editTableCapacity').value;
     const status = document.getElementById('editTableStatus').value;
 
-    if (!tableNumber || !capacity || !status) {
+    if (!tableNumberInput || !capacity || !status) {
         alert('กรุณากรอกข้อมูลให้ครบถ้วน');
         return;
     }
+
+    // เพิ่ม "A" ข้างหน้าตัวเลขอัตโนมัติ
+    const tableNumber = 'A' + tableNumberInput;
 
     try {
         const response = await fetch(`${API_URL}/tables/${tableId}`, {
@@ -690,7 +720,7 @@ async function updateTable() {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                tableNumber: parseInt(tableNumber),
+                tableNumber: tableNumber,
                 capacity: parseInt(capacity),
                 status: status
             })
@@ -712,13 +742,16 @@ async function updateTable() {
 }
 
 async function addNewTable() {
-    const tableNumber = document.getElementById('newTableNumber').value;
+    const tableNumberInput = document.getElementById('newTableNumber').value;
     const capacity = document.getElementById('newTableCapacity').value;
 
-    if (!tableNumber || !capacity) {
+    if (!tableNumberInput || !capacity) {
         alert('กรุณากรอกข้อมูลให้ครบถ้วน');
         return;
     }
+
+    // เพิ่ม "A" ข้างหน้าตัวเลขอัตโนมัติ
+    const tableNumber = 'A' + tableNumberInput;
 
     const existingTable = tables.find(t => t.Table_Number == tableNumber);
     if (existingTable) {
@@ -733,7 +766,7 @@ async function addNewTable() {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                tableNumber: parseInt(tableNumber),
+                tableNumber: tableNumber,
                 capacity: parseInt(capacity),
                 status: 'ว่าง'
             })

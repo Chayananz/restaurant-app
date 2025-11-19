@@ -8,6 +8,15 @@ const db = new sqlite3.Database(dbPath, (err) => {
         console.error('Error:', err);
     } else {
         console.log('เชื่อมต่อฐานข้อมูลสำเร็จ');
+
+        // เปิดใช้งาน Foreign Key Constraints (สำคัญมากสำหรับ SQLite)
+        db.run('PRAGMA foreign_keys = ON', (err) => {
+            if (err) {
+                console.error('Error enabling foreign keys:', err);
+            } else {
+                console.log('Foreign Key Constraints เปิดใช้งานแล้ว');
+            }
+        });
     }
 });
 

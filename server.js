@@ -1,8 +1,9 @@
 const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const path = require('path');
+
+// ใช้ database connection เดียวกันกับที่ใช้ใน main.js และ operations
+const db = require('./database/connection');
 
 const app = express();
 const PORT = 3000;
@@ -11,16 +12,6 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
-
-// เชื่อมต่อฐานข้อมูล
-const dbPath = path.join(__dirname, 'restaurant.db');
-const db = new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-        console.error('Error:', err);
-    } else {
-        console.log('เชื่อมต่อฐานข้อมูลสำเร็จ');
-    }
-});
 
 app.get('/api/tables', (req, res) => {
     db.all('SELECT * FROM `Table` ORDER BY Table_Number', [], (err, rows) => {
@@ -303,16 +294,29 @@ app.post('/api/tables', (req, res) => {
         return;
     }
 
-    db.run('INSERT INTO `Table` (Table_Number, Capacity, Status) VALUES (?, ?, ?)',
-           [tableNumber, capacity, status || 'ว่าง'],
-           function(err) {
+    // ตรวจสอบว่าหมายเลขโต๊ะซ้ำหรือไม่
+    db.get('SELECT * FROM `Table` WHERE Table_Number = ?', [tableNumber], (err, row) => {
         if (err) {
             res.status(500).json({ error: err.message });
             return;
         }
-        res.json({
-            message: 'เพิ่มโต๊ะสำเร็จ',
-            tableId: this.lastID
+
+        if (row) {
+            res.status(400).json({ error: `โต๊ะหมายเลข ${tableNumber} มีอยู่ในระบบแล้ว` });
+            return;
+        }
+
+        db.run('INSERT INTO `Table` (Table_Number, Capacity, Status) VALUES (?, ?, ?)',
+               [tableNumber, capacity, status || 'ว่าง'],
+               function(err) {
+            if (err) {
+                res.status(500).json({ error: err.message });
+                return;
+            }
+            res.json({
+                message: 'เพิ่มโต๊ะสำเร็จ',
+                tableId: this.lastID
+            });
         });
     });
 });
@@ -322,14 +326,27 @@ app.put('/api/tables/:tableId', (req, res) => {
     const tableId = req.params.tableId;
     const { tableNumber, capacity, status } = req.body;
 
-    db.run('UPDATE `Table` SET Table_Number = ?, Capacity = ?, Status = ? WHERE Table_ID = ?',
-           [tableNumber, capacity, status, tableId],
-           function(err) {
+    // ตรวจสอบว่าหมายเลขโต๊ะซ้ำกับโต๊ะอื่นหรือไม่ (ยกเว้นโต๊ะที่กำลังแก้ไข)
+    db.get('SELECT * FROM `Table` WHERE Table_Number = ? AND Table_ID != ?', [tableNumber, tableId], (err, row) => {
         if (err) {
             res.status(500).json({ error: err.message });
             return;
         }
-        res.json({ message: 'แก้ไขโต๊ะสำเร็จ' });
+
+        if (row) {
+            res.status(400).json({ error: `โต๊ะหมายเลข ${tableNumber} มีอยู่ในระบบแล้ว` });
+            return;
+        }
+
+        db.run('UPDATE `Table` SET Table_Number = ?, Capacity = ?, Status = ? WHERE Table_ID = ?',
+               [tableNumber, capacity, status, tableId],
+               function(err) {
+            if (err) {
+                res.status(500).json({ error: err.message });
+                return;
+            }
+            res.json({ message: 'แก้ไขโต๊ะสำเร็จ' });
+        });
     });
 });
 
@@ -407,16 +424,29 @@ app.post('/api/menu', (req, res) => {
         return;
     }
 
-    db.run('INSERT INTO Menu (Menu_Name, Menu_Price, Category) VALUES (?, ?, ?)',
-           [menuName, menuPrice, category],
-           function(err) {
+    // ตรวจสอบว่าชื่อเมนูซ้ำหรือไม่
+    db.get('SELECT * FROM Menu WHERE Menu_Name = ?', [menuName], (err, row) => {
         if (err) {
             res.status(500).json({ error: err.message });
             return;
         }
-        res.json({
-            message: 'เพิ่มเมนูสำเร็จ',
-            menuId: this.lastID
+
+        if (row) {
+            res.status(400).json({ error: `เมนู "${menuName}" มีอยู่ในระบบแล้ว` });
+            return;
+        }
+
+        db.run('INSERT INTO Menu (Menu_Name, Menu_Price, Category) VALUES (?, ?, ?)',
+               [menuName, menuPrice, category],
+               function(err) {
+            if (err) {
+                res.status(500).json({ error: err.message });
+                return;
+            }
+            res.json({
+                message: 'เพิ่มเมนูสำเร็จ',
+                menuId: this.lastID
+            });
         });
     });
 });
@@ -426,14 +456,27 @@ app.put('/api/menu/:menuId', (req, res) => {
     const menuId = req.params.menuId;
     const { menuName, menuPrice, category } = req.body;
 
-    db.run('UPDATE Menu SET Menu_Name = ?, Menu_Price = ?, Category = ? WHERE Menu_ID = ?',
-           [menuName, menuPrice, category, menuId],
-           function(err) {
+    // ตรวจสอบว่าชื่อเมนูซ้ำกับเมนูอื่นหรือไม่ (ยกเว้นเมนูที่กำลังแก้ไข)
+    db.get('SELECT * FROM Menu WHERE Menu_Name = ? AND Menu_ID != ?', [menuName, menuId], (err, row) => {
         if (err) {
             res.status(500).json({ error: err.message });
             return;
         }
-        res.json({ message: 'แก้ไขเมนูสำเร็จ' });
+
+        if (row) {
+            res.status(400).json({ error: `เมนู "${menuName}" มีอยู่ในระบบแล้ว` });
+            return;
+        }
+
+        db.run('UPDATE Menu SET Menu_Name = ?, Menu_Price = ?, Category = ? WHERE Menu_ID = ?',
+               [menuName, menuPrice, category, menuId],
+               function(err) {
+            if (err) {
+                res.status(500).json({ error: err.message });
+                return;
+            }
+            res.json({ message: 'แก้ไขเมนูสำเร็จ' });
+        });
     });
 });
 
