@@ -2,7 +2,6 @@ import { useState } from "react";
 import {
   TrendingUp,
   ShoppingBag,
-  Users,
   UtensilsCrossed,
   Plus,
   Edit,
@@ -14,7 +13,7 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+// Input removed - not used currently
 import { formatPrice } from "@/lib/utils";
 import { menuItems, categories } from "@/lib/mock-data";
 import type { MenuItem, Order, OrderStatus } from "@/types";
@@ -63,8 +62,9 @@ export function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<Tab>("dashboard");
   const [menuList, setMenuList] = useState<MenuItem[]>(menuItems);
   const [orders, setOrders] = useState<Order[]>(pendingOrders);
-  const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [_editingItem, setEditingItem] = useState<MenuItem | null>(null);
+  const [_showAddForm, setShowAddForm] = useState(false);
+  // Note: _editingItem and _showAddForm will be used for edit/add modal forms
 
   const updateOrderStatus = (orderId: string, newStatus: OrderStatus) => {
     setOrders((prev) =>

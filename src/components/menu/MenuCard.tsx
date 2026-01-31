@@ -12,7 +12,7 @@ interface MenuCardProps {
 }
 
 export function MenuCard({ item }: MenuCardProps) {
-  const { items, addItem, updateQuantity, removeItem } = useCartStore();
+  const { items, addItem, updateQuantity } = useCartStore();
   const cartItem = items.find((i) => i.menuItem.id === item.id);
   const quantity = cartItem?.quantity || 0;
 

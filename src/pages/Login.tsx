@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { UtensilsCrossed, Eye, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
